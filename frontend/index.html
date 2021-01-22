@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>SIMPLE FRONTEND</title>
+		
+	</head>
+	<body>
+		<h1>Testing the database</h1>
+		<form id='form'> 
+			<input type='text' id="username"/ name="username">
+			<input type='password' id="password" name="password"/>
+			<input type='submit'/>
+		</form>
+		<script>
+			const form = document.getElementById('form')
+			form.onsubmit = login
+			function login(event){
+				const url='http://localhost:8000/token'
+				var formData = new FormData();
+				formData.append("username", document.getElementById('username').value)
+				formData.append("password", document.getElementById('password').value)	
+				var request = new XMLHttpRequest();
+				request.open("POST", url);
+				request.send(formData);
+				event.preventDefault();
+			}
+		</script>
+	</body>
+</html>
