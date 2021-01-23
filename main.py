@@ -1,13 +1,21 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
 app = FastAPI()
+
+origins = [
+    'http://localhost',
+    'http://localhost:3000',
+]
+
+app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 SECRET_KEY = "60ca61b3e9fb34a3930a8048c91b3e135775170322363980711504e792eaae2a"
 ALGORITHM = "HS256"
@@ -107,7 +115,7 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
 
 
 @app.post('/token', response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_for_access_token(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(fake_users_db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -119,6 +127,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token = create_access_token(
             data={"sub": user.username}, expires_delta=access_token_expires
     )
+    response.set_cookie(key='jwt', secure=True, httponly=True, value=access_token)
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get('/users/me', response_model=User)

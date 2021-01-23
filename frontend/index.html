@@ -1,29 +1,52 @@
 <!DOCTYPE html>
 <html>
-	<head>
+    <head>
 		<title>SIMPLE FRONTEND</title>
 		
 	</head>
 	<body>
-		<h1>Testing the database</h1>
+        <h1 id='title'>Testing the database</h1>
 		<form id='form'> 
 			<input type='text' id="username"/ name="username">
 			<input type='password' id="password" name="password"/>
 			<input type='submit'/>
 		</form>
+        <button onclick="get_user()">get user</button>
 		<script>
+            let inMemoryToken;
 			const form = document.getElementById('form')
 			form.onsubmit = login
+
 			function login(event){
 				const url='http://localhost:8000/token'
 				var formData = new FormData();
 				formData.append("username", document.getElementById('username').value)
-				formData.append("password", document.getElementById('password').value)	
+				formData.append("password", document.getElementById('password').value)
 				var request = new XMLHttpRequest();
+                request.withCredentials = true;
 				request.open("POST", url);
 				request.send(formData);
+                request.onload = function() {
+                    if (request.readyState === request.DONE){
+                        inMemoryToken = JSON.parse(request.responseText)
+                        console.log(inMemoryToken)
+                    }
+                }
 				event.preventDefault();
 			}
-		</script>
+
+            function get_user(){
+                var request = new XMLHttpRequest();
+                request.open("GET", "http://localhost:8000/users/me")
+                request.setRequestHeader('Authorization', 'Bearer '.concat(inMemoryToken.access_token));
+                request.withCredentials = true
+                request.send()
+                request.onload = function(){
+                    var response_data = JSON.parse(request.responseText)
+                    console.log(response_data)
+                    document.getElementById('title').innerHTML = "Your name is: ".concat(response_data.username)
+                }
+            }
+        </script>
 	</body>
 </html>
